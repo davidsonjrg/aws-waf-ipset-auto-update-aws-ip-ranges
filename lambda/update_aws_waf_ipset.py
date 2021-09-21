@@ -29,7 +29,7 @@ INFO_LOGGING = os.getenv('INFO_LOGGING','false')
 if INFO_LOGGING == ['']: INFO_LOGGING = 'false'
 
 # Get scope for AWS WAF resource creation
-IPSETSCOPE = os.getenv('IPSETSCOPE','false')
+IPSETSCOPE = os.getenv('IPSETSCOPE','REGIONAL')
 if IPSETSCOPE == ['']: IPSETSCOPE = 'REGIONAL'
 
 #######
