@@ -10,7 +10,6 @@ import logging
 import os
 from urllib import request
 
-
 ####### Get values from environment variables  ######
 IPV4_SET_NAME=os.environ['IPV4_SET_NAME'].strip()
 IPV4_SET_ID=os.environ['IPV4_SET_ID'].strip()
@@ -28,6 +27,10 @@ if EC2_REGIONS == ['']: EC2_REGIONS = ['all']
 # Set logging level from environment variable
 INFO_LOGGING = os.getenv('INFO_LOGGING','false')
 if INFO_LOGGING == ['']: INFO_LOGGING = 'false'
+
+# Get scope for AWS WAF resource creation
+IPSETSCOPE = os.getenv('IPSETSCOPE','false')
+if IPSETSCOPE == ['']: IPSETSCOPE = 'REGIONAL'
 
 #######
 
@@ -57,7 +60,7 @@ def lambda_handler(event, context):
     # Extract the service ranges
     ranges = get_ranges_for_service(ip_ranges,SERVICES,EC2_REGIONS)
 
-    # Update the AWS WAF IP sets
+    # Update the WAF IP sets
     update_waf_ipset(IPV4_SET_NAME,IPV4_SET_ID,ranges['ipv4'])
     update_waf_ipset(IPV6_SET_NAME,IPV6_SET_ID,ranges['ipv6'])
 
@@ -130,11 +133,11 @@ def update_waf_ipset(ipset_name,ipset_id,address_list):
 
     lock_token = get_ipset_lock_token(waf_client,ipset_name,ipset_id)
 
-    logging.info(f'Got LockToken for AWS WAF IP Set "{ipset_name}": {lock_token}')
+    logging.info(f'Got LockToken for WAFv2 IP Set "{ipset_name}": {lock_token}')
 
     waf_client.update_ip_set(
         Name=ipset_name,
-        Scope='REGIONAL',
+        Scope=IPSETSCOPE,
         Id=ipset_id,
         Addresses=address_list,
         LockToken=lock_token
@@ -146,7 +149,7 @@ def get_ipset_lock_token(client,ipset_name,ipset_id):
     """Returns the AWS WAF IP set lock token"""
     ip_set = client.get_ip_set(
         Name=ipset_name,
-        Scope='REGIONAL',
+        Scope=IPSETSCOPE,
         Id=ipset_id)
     
     return ip_set['LockToken']

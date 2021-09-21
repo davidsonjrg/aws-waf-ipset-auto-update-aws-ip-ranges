@@ -27,6 +27,13 @@ Parameters:
     Type: String
     Default: 'all'
     Description: For the "EC2" service, specify the AWS regions to add, separated by commas. Use 'all' to add all AWS regions.
+  IPSETSCOPE:
+    Type: String
+    Default: REGIONAL
+    AllowedValues:
+        - REGIONAL
+        - CLOUDFRONT
+    Description: Select REGIONAL or CLOUDFRONT. WAF IP sets can either be used for REGIONAL resources or for CLOUDFRONT. REGIONAL IP sets will be created in the region where template is deployed. CLOUDFRONT IP Sets are required to be deployed in us-east-1.
 
 Resources:
   IPv4Set:
@@ -39,7 +46,8 @@ Resources:
       Name: !Sub
         - ${AWS::StackName}-${Suffix}
         - {Suffix: !Ref IPV4SetNameSuffix}
-      Scope: REGIONAL
+      Scope: 
+        Ref: IPSETSCOPE
 
   IPv6Set:
     Type: AWS::WAFv2::IPSet
@@ -51,7 +59,8 @@ Resources:
       Name: !Sub
         - ${AWS::StackName}-${Suffix}
         - {Suffix: !Ref IPV6SetNameSuffix}
-      Scope: REGIONAL
+      Scope: 
+        Ref: IPSETSCOPE
 
   LambdaUpdateWAFIPSet:
     Type: AWS::Lambda::Function
@@ -76,6 +85,8 @@ Resources:
           EC2_REGIONS:
             Ref: EC2REGIONS
           INFO_LOGGING: "false"
+          IPSETSCOPE:
+            Ref: IPSETSCOPE
 
       FunctionName: !Sub '${AWS::StackName}-UpdateWAFIPSets'
       Handler: update_aws_waf_ipset.lambda_handler
