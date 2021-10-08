@@ -45,9 +45,10 @@ To simplify setup and deployment, assign the values to the following variables. 
 
 ```bash
 REGION=<region>
-CFN_STACK_NAME=<Stack name>
+CFN_STACK_NAME=<stack name>
 BUCKET_NAME=<bucket name>
-OBJECT_NAME=auto-update_aws_waf_ipset.zip
+OBJECT_NAME=update_aws_waf_ipset.zip
+IPSETSCOPE=<ip set scope>
 ```
 
 ### 1. Create an S3 bucket
@@ -97,6 +98,7 @@ The CloudFormation template has the following input parameters.
 * `IPV6SetNameSuffix`: Enter the name for the AWS WAF IPv6 set. Default is `IPv6Set`.
 * `SERVICES`: Enter the name of the AWS services to add, separated by commas and as explained in <https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html>. The default is `ROUTE53_HEALTHCHECKS,CLOUDFRONT`.
 * `EC2REGIONS`: For the "EC2" service only, specify the AWS regions to add, separated by commas. Use 'all' to add all AWS regions. Default is `all`.
+* `IPSETSCOPE`" Select REGIONAL or CLOUDFRONT. WAF IP sets can either be used for REGIONAL resources or for CLOUDFRONT. REGIONAL IP sets will be created in the region where template is deployed. CLOUDFRONT IP Sets are required to be deployed in us-east-1. Default is `REGIONAL`.
 
 Use the command below to create the stack with the default values. You can update the parameter values as required.
 
@@ -107,6 +109,7 @@ aws cloudformation create-stack \
   --region $REGION \
   --parameters ParameterKey=LambdaCodeS3Bucket,ParameterValue=$BUCKET_NAME \
   ParameterKey=LambdaCodeS3Object,ParameterValue=$OBJECT_NAME \
+  ParameterKey=IPSETSCOPE,ParameterValue=$IPSETSCOPE \
   --capabilities CAPABILITY_IAM
 ```
 
@@ -189,7 +192,8 @@ rm lambda_return.json
 After the stack is created, you can customize the Lambda function's execution by editing the function's [environment variables](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html).
 
 * `SERVICES`: **Optional**. Comma separated values for service's to get the ranges for. Value is set to `ROUTE53_HEALTHCHECKS,CLOUDFRONT` if it is not explicitly set.
-* `EC2_REGIONS`. **Optional**. Comma separated values for EC2 regions to be added to the IP set.
+* `EC2_REGIONS`: **Optional**. Comma separated values for EC2 regions to be added to the IP set.
+* `IPSETSCOPE`: **Optional**. REGIONAL or CLOUDFRONT (Global) IP Set. Value is set to `REGIONAL` if it is not explicitly set.
 * `INFO_LOGGING`: **Optional**. Set it to `true` for more detailed logging of the AWS Lambda Python script.
 * `IPV4_SET_NAME`: The AWS WAF IPv4 set name.
 * `IPV4_SET_ID`: The ID of the AWS WAF IPV4 set to update.
